@@ -1,0 +1,1 @@
+﻿global using SignalRExampleRazorPages.Shared.Models;

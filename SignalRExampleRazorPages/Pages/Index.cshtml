@@ -1,0 +1,75 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<div id="Test" class="container">
+
+
+@foreach (var camara in Model.CamaraModels)
+{
+	<div  class="text-center">
+		<h1 class="display-4">@camara.Model</h1>
+		<p>@camara.SourceName</p>
+		<img data-value="@camara.Id" src="#"/>
+	</div>
+
+}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+const connection = new signalR.HubConnectionBuilder()
+.withUrl("/camarahub")
+.withAutomaticReconnect({
+nextRetryDelayInMilliseconds: retryContext => {
+if (retryContext.elapsedMilliseconds < 60000) {
+// If we've been reconnecting for less than 60 seconds so far,
+// wait between 0 and 10 seconds before the next reconnect attempt.
+return Math.random() * 10000;
+} else {
+// If we've been reconnecting for more than 60 seconds so far, stop reconnecting.
+return null;
+}
+}
+})
+.build();
+
+async function start() {
+	try {
+		await connection.start();
+		console.log("SignalR Connected.");
+		connection.on("CamaraRecived",
+			function(camara) {
+				if(document.querySelector(`[data-value="${camara.id}"]`)){
+					document.querySelector(`[data-value="${camara.id}"]`).setAttribute("src",camara.src);
+				}
+			});
+		connection.on("ReceiveCamaras",
+			function(camaras) {
+				console.log("ReceiveCamaras");
+				let c =document.querySelector(`#Test`);
+				console.log(c);
+				
+				let html = "";
+				debugger;
+				Array.from(camaras).forEach((x) => {
+					console.log(html);
+					html += `<div  class="text-center">
+		<h1 class="display-4">${x.Model}</h1>
+		<p>${x.Model.SourceName}</p>
+		<img data-value="${x.Model.Id}" src="#"/>
+	</div>`;
+				});
+				c.innerHTML = html;
+			
+			});
+	} catch (err) {
+		console.log(err);
+		
+	}
+};
+start();
+
+
+</script>
